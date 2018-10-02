@@ -1,70 +1,169 @@
+import robo_rl.common.utils.nn_utils as nn_utils
+import torch
+import torch.nn.functional as torchfunc
 from osim.env import ProstheticsEnv
-import time
+from robo_rl.common.networks.linear_network import LinearNetwork
 
-env = ProstheticsEnv(visualize=True)
+env = ProstheticsEnv(visualize=False)
 observation = env.reset()
-
-# class CMCEnv(OsimEnv):
-# 	time_limit = 300
-
-# 	def __init__(self, visualize = True, integrator_accuracy = 5e-5):
-# 		self.model_path = "/home/joy/zReinforcementLearning/prosthetic-ai/RunningSimulation_simTK/FullBodyModel_Hamner2010_v2_0.osim"
-# 		super().__init__(visualize = visualize, integrator_accuracy = integrator_accuracy)
-
-# 	def is_done(self):
-# 		state_desc = self.get_state_desc()
-# 		return state_desc["body_pos"]["pelvis"][1] < 0.6
-
-# 	def reward(self):
-# 		state_desc = self.get_state_desc()
-# 		prev_state_desc = self.get_prev_state_desc()
-# 		if not prev_state_desc:
-# 			return 0
-# 		return 9.0 - (state_desc["body_vel"]["pelvis"][0] - 3.0)**2
-
-# env= CMCEnv()
-# env.reset()
 
 print("MUSCLE SET")
 muscleSet = env.osim_model.muscleSet
 for i in range(muscleSet.getSize()):
-			print(i,":\""+muscleSet.get(i).getName()+"\",")
-
-
-# print("JOINT SET")
-# jointSet = env.osim_model.model.getStateVariableNames()
-# for i in range(jointSet.getSize()):
-# 			print(i,jointSet.get(i))
+    print(i, ":\"" + muscleSet.get(i).getName() + "\",")
 
 # med - medial(towards the middle), lat - lateral(away from the middle)
-muscle_dict = {"add_brev_r":1,"bifemsh_r":3,"glut_max1_r":4,"psoas_r":5
-,"rect_fem_r":6,"vas_lat_r":7,"add_brev_l":9,"bifemsh_l":11,"glut_max1_l":12,
-"psoas_l":13,"rect_fem_l":14,"vas_lat_l":15,"med_gas_l":16,"soleus_l":17,
-"tib_ant_l":18}
+muscle_dict = {"add_brev_r": 1, "bifemsh_r": 3, "glut_max1_r": 4, "psoas_r": 5,
+               "rect_fem_r": 6, "vas_lat_r": 7, "add_brev_l": 9, "bifemsh_l": 11, "glut_max1_l": 12,
+               "psoas_l": 13, "rect_fem_l": 14, "vas_lat_l": 15, "med_gas_l": 16, "soleus_l": 17,
+               "tib_ant_l": 18}
 
-# header_indices = [10,13,20,24,28,31,53,56,63,67,71,74,75,77,81]
-header_indices = [10,13,20,24,28,31,53,56,63,67,71,74,75,77,81]
+# semimem - one of hamstring
+muscle_dict_2 = {"semimem_r": 2, "bflh_r": 3, "glmax1_r": 4,
+                 "recfem_r": 6, "vaslat_r": 7, "semimem_l": 10, "bflh_l": 11, "glmax1_l": 12,
+                 "recfem_l": 14, "vaslat_l": 15, "gasmed_l": 16, "soleus_l": 17,
+                 "tibant_l": 18}
+
+header_indices = [10, 13, 20, 24, 28, 31, 53, 56, 63, 67, 71, 74, 75, 77, 81]
+header_indices_right = [1, 4, 10, 11]
+header_indices_left = [1, 4, 10, 11, 13, 14, 15]
+
+right_leg = open("../../data/RAW_EMG_DATA/subject01/Run_20002_EMG_RAW_right.sto")
+left_leg = open("../../data/RAW_EMG_DATA/subject01/Run_20002_EMG_RAW_left.sto")
+
+right_leg_headers = right_leg.readline().split()
+left_leg_headers = left_leg.readline().split()
+
+right_leg_values = []
+left_leg_values = []
+
+# for i in range(len(headers)):
+# 	print(i,headers[i])
+
+for line in right_leg.readlines():
+    values = [float(x) for x in line.split()]
+    right_leg_values.append(values)
+
+for line in left_leg.readlines():
+    values = [float(x) for x in line.split()]
+    left_leg_values.append(values)
+
+data_length = len(right_leg_values)
+
+linear_network = LinearNetwork(layers_size=[1, 100, 100, 1])
+linear_network.apply(nn_utils.xavier_initialisation)
 
 
-tr=0.0
-with open("subject01_Run_20002_cycle1_controls.sto") as f:
-	headers = f.readline().split()
-	count = 0
-	# for i in range(len(headers)):
-	# 	print(i,headers[i])
-	for line in f.readlines():
-		values = [float(x) for x in line.split()]
-		action = env.action_space.sample() * 0
-		# for i in range(len(action)):
-		# 	## first value is time
-		# 	action[i] = values[i+1]
-		for header_index in header_indices:
-			action[muscle_dict[headers[header_index]]] = values[header_index]*10
-		# print(action)
-		o,r,e,d = env.step(action)
+def absin(x):
+    return torch.abs(torch.sin(x))
 
-		tr+=r
-		# print(tr)
-		if(e):
-			break
-print(tr)
+
+def no_activation(x):
+    return x
+
+
+def excitation_transformation(x, i, train=False):
+    action = linear_network(torch.Tensor([x]), final_layer_function=no_activation,
+                            activation_function=torchfunc.elu)
+    action = torch.clamp(action, 0, 1)
+    if train:
+        linear_network.actions[i].append(action)
+    return action.item()
+
+
+initial_phase = 2000
+cycle_delay = int(data_length / 2)
+
+
+def train(num_iterations):
+    best_tr = -100000
+
+    for j in range(num_iterations):
+        linear_network.actions = []
+        linear_network.rewards = []
+        linear_network.zero_grad()
+
+        tr = 0.0
+        env.reset()
+        for i in range(data_length):
+            linear_network.actions.append([])
+            action = [0] * 19
+
+            right_leg_index = (i + initial_phase) % data_length
+            left_leg_index = (right_leg_index + cycle_delay) % data_length
+
+            for header_index in header_indices_right:
+                action[muscle_dict_2[right_leg_headers[header_index]]] = \
+                    excitation_transformation(right_leg_values[right_leg_index][header_index], i, True)
+
+            for header_index in header_indices_left:
+                action[muscle_dict_2[left_leg_headers[header_index]]] = \
+                    excitation_transformation(left_leg_values[left_leg_index][header_index], i, True)
+
+            # print(action)
+            o, r, e, d = env.step(action)
+            linear_network.rewards.append(r)
+            tr += r
+
+            # print(tr)
+            if e:
+                break
+        discount_factor = 0.9
+        back_reward = linear_network.rewards[-1]
+        episode_len = len(linear_network.rewards)
+        discounted_rewards = [0] * episode_len
+
+        if tr > best_tr:
+            torch.save(linear_network.state_dict(), 'transform_net_best')
+            best_tr = tr
+
+        print(j, tr, episode_len, best_tr)
+
+        for i in range(episode_len - 1):
+            discounted_rewards[-i] = back_reward
+            back_reward = back_reward * discount_factor + linear_network.rewards[-i - 1]
+        discounted_rewards[0] = back_reward
+
+        for i in range(episode_len):
+            for action in linear_network.actions[i]:
+                r = action * torch.Tensor([discounted_rewards[i]])
+                # print(r, action)
+                r.backward()
+                torch.nn.utils.clip_grad_norm_(linear_network.parameters(), 100)
+                # print(linear_network.linear_layers[0].weight.grad.data)
+                for param in linear_network.parameters():
+                    param.data.add_(-0.0001 * param.grad.data)
+
+    torch.save(linear_network.state_dict(), 'transform_net')
+
+
+def test():
+    linear_network.load_state_dict(torch.load('transform_net_best'))
+    tr = 0.0
+    for i in range(data_length):
+        action = [0] * 19
+
+        right_leg_index = (i + initial_phase) % data_length
+        left_leg_index = (right_leg_index + cycle_delay) % data_length
+
+        for header_index in header_indices_right:
+            action[muscle_dict_2[right_leg_headers[header_index]]] = \
+                excitation_transformation(right_leg_values[right_leg_index][header_index], i)
+
+        for header_index in header_indices_left:
+            action[muscle_dict_2[left_leg_headers[header_index]]] = \
+                excitation_transformation(left_leg_values[left_leg_index][header_index], i)
+
+        # print(action)
+        o, r, e, d = env.step(action)
+        tr += r
+
+        # print(tr)
+        if e:
+            break
+    print(tr)
+
+
+train(1000)
+# test()
+
