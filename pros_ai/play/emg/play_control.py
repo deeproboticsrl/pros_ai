@@ -61,7 +61,7 @@ def no_activation(x):
 
 def excitation_transformation(x, i, train=False):
     action = linear_network(torch.Tensor([x]), final_layer_function=no_activation,
-                            activation_function=torchfunc.selu)
+                            activation_function=torch.exp)
     if train:
         linear_network.actions[i].append(action)
     return action.item()
