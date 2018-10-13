@@ -78,5 +78,19 @@ def observation_to_array(observation):
     for misc_key in ['mass_center_pos', 'mass_center_vel', 'mass_center_acc']:
         for i in range(3):
             observation_array.append(observation["misc"][misc_key][i])
-    return observation_array
+    return np.array(observation_array)
 
+
+def get_positional_observations_array(observation):
+    observation_array = []
+    body_keys = ["body_pos", "body_pos_rot"]
+
+    for body_key in body_keys:
+        for body_part in ["pelvis", "head", "torso", "toes_l", "tibia_l", "talus_l", "pros_tibia_r", "pros_foot_r",
+                          "femur_l", "femur_r", "calcn_l"]:
+            for i in range(3):
+                observation_array.append(observation[body_key][body_part][i])
+
+    for i in range(3):
+        observation_array.append(observation["misc"]['mass_center_pos'][i])
+    return np.array(observation_array)
