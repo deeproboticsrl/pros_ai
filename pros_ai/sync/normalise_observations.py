@@ -14,7 +14,7 @@ experts_file_path = "/home/joy/zReinforcementLearning/prosthetic-ai/Data/experts
 with open(experts_file_path, "rb") as f:
     expert_trajectories = pickle.load(f)
 
-observation_length = len(observation_to_array(expert_trajectories[0][0]))
+# observation_length = len(observation_to_array(expert_trajectories[0][0]))
 observation_length = 69
 observations_max = np.full(shape=(observation_length, 1), fill_value=-np.inf)
 observations_sum = np.zeros(shape=(observation_length, 1))

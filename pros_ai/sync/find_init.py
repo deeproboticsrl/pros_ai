@@ -72,8 +72,6 @@ for i in range(len(expert_trajectories)):
         observation = expert_trajectory[j]
         # convert observation to array
         pos_observation_array = get_positional_observations_array(observation)
-        print(pos_observation_array[-3:])
-        continue
         max_normalised_pos_obs_array = np.empty(shape=(len(pos_observation_array), 1))
         gaussian_normalised_pos_obs_array = copy.deepcopy(pos_observation_array - expert_pos_stats["mean"])
 
@@ -84,16 +82,10 @@ for i in range(len(expert_trajectories)):
                 gaussian_normalised_pos_obs_array[k] = gaussian_normalised_pos_obs_array[k] / expert_pos_stats["std"][k]
 
         # calculate distance
-        no_norm_pos_distance = (pos_observation_array - pros_init_positional_obs)
-        print(pos_observation_array, pros_init_positional_obs)
+        no_norm_pos_distance = np.sum(abs(pos_observation_array - pros_init_positional_obs))
         max_normalised_pos_distance = np.sum((max_normalised_pos_obs_array - max_normalised_pros_init_obs) ** 2)
         gaussian_normalised_pos_distance = np.sum(
             (gaussian_normalised_pos_obs_array - gaussian_normalised_pros_init_obs) ** 2)
-
-        print(no_norm_pos_distance)
-        print(max_normalised_pos_distance)
-        print(gaussian_normalised_pos_distance)
-        raise SystemExit
 
         # update minima
         if no_norm_pos_distance < min_distance_experts_no_norm[i]:
