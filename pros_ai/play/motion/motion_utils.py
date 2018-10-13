@@ -1,6 +1,7 @@
-import numpy as np
-import glob
 import copy
+import glob
+
+import numpy as np
 
 
 def print_sim_array(array):
@@ -65,7 +66,6 @@ def get_relative_observations(observation):
 
 
 def observation_to_array(observation):
-
     observation_array = []
     body_keys = ["body_pos", "body_vel", "body_acc", "body_pos_rot", "body_vel_rot", "body_acc_rot"]
 
@@ -78,7 +78,7 @@ def observation_to_array(observation):
     for misc_key in ['mass_center_pos', 'mass_center_vel', 'mass_center_acc']:
         for i in range(3):
             observation_array.append(observation["misc"][misc_key][i])
-    return np.array(observation_array)
+    return np.array(observation_array).reshape((-1, 1))
 
 
 def get_positional_observations_array(observation):
@@ -93,4 +93,4 @@ def get_positional_observations_array(observation):
 
     for i in range(3):
         observation_array.append(observation["misc"]['mass_center_pos'][i])
-    return np.array(observation_array)
+    return np.array(observation_array).reshape((-1, 1))
