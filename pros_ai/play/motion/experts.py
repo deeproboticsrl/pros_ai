@@ -1,3 +1,5 @@
+"""Creates one pickle file containing all experts from separated expert files"""
+
 import pickle
 import glob
 

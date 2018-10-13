@@ -1,7 +1,9 @@
-from pros_ai.play.motion.motion_gen_env import MotionGenEnv
+from pros_ai.play import MotionGenEnv, get_relative_observations, observation_to_array
+import glob
+import pickle
 
-model_path = "./gait14dof22musc_pros_20180507.osim"
-visualize = True
+model_path = "../../gait14dof22musc_pros_20180507.osim"
+visualize = False
 
 """
 Average cycle length is 1788.35 rows in 120 files.
@@ -11,26 +13,6 @@ Max row count is  2884 corresponding to file  subject17_Run_50001_cycle3_states.
 
 motHeader_indices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 38, 39, 40, 41, 42, 43, 44,
                      45, 46, 47, 48, 51, 52, 53, 54, 55, 58]
-
-state_data_dir_path = "/home/joy/zReinforcementLearning/prosthetic-ai/Data/state"
-
-motion_file_path = state_data_dir_path + "/subject04_Run_20002_cycle1_states.sto"
-min_rows_motion_file_path = state_data_dir_path + "/subject03_Run_20002_cycle2_states.sto"
-max_rows_motion_file_path = state_data_dir_path + "/subject17_Run_50001_cycle3_states.sto"
-
-# motion_file_path = min_rows_motion_file_path
-####################################################################################
-#
-# state_data_dir_path = "/home/joy/zReinforcementLearning/prosthetic-ai/Data/state"
-#
-# state_files = glob.glob(state_data_dir_path + "/*.sto")
-
-# for motion_file_path in state_files:
-
-# Simulate values from the sto file .. angles are in radians
-
-env = MotionGenEnv(model_path=model_path, visualize=visualize)
-
 
 def play_motion(expert_file_path, indices=None, sleeping_vis=False):
     # assume indices sorted
@@ -66,12 +48,12 @@ def play_motion(expert_file_path, indices=None, sleeping_vis=False):
         if sleeping_vis:
             env.sleep(visualize_list[0])
         env.is_visualizing = visualize_list[0]
-        observation = env.get_relative_observations()
+        observation = get_relative_observations(env.get_state_desc())
         observations.append(observation)
 
-        count = 1
+        file_count = 1
         for line in lines[8:]:
-            env.set_visualisation(visualize=visualize_list[count])
+            env.set_visualisation(visualize=visualize_list[file_count])
 
             # convert strings to floats
             values = [float(x) for x in line.split()]
@@ -82,18 +64,20 @@ def play_motion(expert_file_path, indices=None, sleeping_vis=False):
             env.model.assemble(env.state)
             env.integrate(endtime=(values[0] - start_time))
             if sleeping_vis:
-                env.sleep(visualize_list[count])
-            env.is_visualizing = visualize_list[count]
-            observation = env.get_relative_observations()
+                env.sleep(visualize_list[file_count])
+            env.is_visualizing = visualize_list[file_count]
+            observation = get_relative_observations(env.get_state_desc())
             observations.append(observation)
-            count += 1
-    # print(observations[25])
+            file_count += 1
+    observation = observations[25]
+    # print(observation)
+    # print(len(observation_to_array(observation)))
 
-
-#
-# with open("./obs/"+motion_file_path.split('/')[-1].split('.')[0]+".obs", 'wb') as f:
-#     print(len(observations))
-#     pickle.dump(observations, f)
+    file_count = 1
+    with open("./obs/"+motion_file_path.split('/')[-1].split('.')[0]+".obs", 'wb') as f:
+        print(len(observations),motion_file_path, file_count)
+        pickle.dump(observations, f)
+        file_count+=1
 
 ####################################################################################
 
@@ -102,5 +86,27 @@ def play_motion(expert_file_path, indices=None, sleeping_vis=False):
 
 # observation for turning -- relative difference  pelvis direction -- goal direction
 
-# play_motion(expert_file_path=motion_file_path, indices=range(234, 280))
-play_motion(expert_file_path=motion_file_path, indices=[234,235,236,237,238,239, 278, 456, 567], sleeping_vis=True)
+
+state_data_dir_path = "/home/joy/zReinforcementLearning/prosthetic-ai/Data/state"
+
+motion_file_path = state_data_dir_path + "/./subject01_Run_20002_cycle1_states.sto"
+min_rows_motion_file_path = state_data_dir_path + "/subject03_Run_20002_cycle2_states.sto"
+max_rows_motion_file_path = state_data_dir_path + "/subject17_Run_50001_cycle3_states.sto"
+
+# motion_file_path = min_rows_motion_file_path
+####################################################################################
+
+state_data_dir_path = "/home/joy/zReinforcementLearning/prosthetic-ai/Data/state"
+
+state_files = glob.glob(state_data_dir_path + "/*.sto")
+
+# for motion_file_path in state_files:
+#
+#     # Simulate values from the sto file .. angles are in radians
+#
+#     env = MotionGenEnv(model_path=model_path, visualize=visualize)
+#
+#     # play_motion(expert_file_path=motion_file_path, indices=range(234, 280))
+#     # play_motion(expert_file_path=motion_file_path, indices=[234, 278, 456, 567], sleeping_vis=True)
+#     play_motion(expert_file_path=motion_file_path)
+play_motion(expert_file_path=motion_file_path)

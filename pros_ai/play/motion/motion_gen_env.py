@@ -1,4 +1,3 @@
-import copy
 import time
 
 from osim.env import OsimModel
@@ -68,26 +67,6 @@ class MotionGenEnv(OsimModel):
 
         print("STATE VARIABLE VALUES Length -- ", self.model.getNumStateVariables())
         print(self.model.getStateVariableValues(self.state))
-
-    def get_relative_observations(self):
-        body_observations = {}
-        observation = self.get_state_desc()
-        pelvis_observation = {}
-
-        body_keys = ["body_pos", "body_vel", "body_acc", "body_pos_rot", "body_vel_rot", "body_acc_rot"]
-        for key in body_keys:
-            pelvis_observation[key] = copy.deepcopy(observation[key]["pelvis"])
-
-        for key in body_keys:
-            body_observations[key] = {}
-            for body_part in ["pelvis", "head", "torso", "toes_l", "tibia_l", "talus_l", "pros_tibia_r", "pros_foot_r",
-                              "femur_l", "femur_r", "calcn_l"]:
-                body_observations[key][body_part] = [0.0] * 3
-                for i in range(2):
-                    body_observations[key][body_part][i] = observation[key][body_part][i] - pelvis_observation[key][i]
-
-        body_observations["misc"] = copy.deepcopy(observation["misc"])
-        return body_observations
 
     def get_state_variable_name(self, mot_header):
         return self.motFileHeader_to_stateVariableName_dict[mot_header]
