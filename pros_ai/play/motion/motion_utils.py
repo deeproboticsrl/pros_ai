@@ -108,6 +108,7 @@ def get_pos_trans_misc_minimal(observation):
             for i in range(3):
                 observation_array.append(observation[body_key][body_part][i])
 
-    for i in range(3):
-        observation_array.append(observation["misc"]['mass_center_pos'][i])
+    for misc_key in ['mass_center_pos', 'mass_center_vel', 'mass_center_acc']:
+        for i in range(3):
+            observation_array.append(observation["misc"][misc_key][i])
     return np.array(observation_array).reshape((-1, 1))

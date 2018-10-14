@@ -1,5 +1,10 @@
 """Sample expert trajectories based on distances calculated
 Using max normalisation and trans misc observations Minimal version - remove toes, talus and pros_foot
+Also included velocity and acceleration of COM but they are not used to calculate distances
+
+NOTE - FOR NOW DISTANCES ARE ONLY USED FOR GETTING THE START POINT. THEN EACH TRAJECTORY IS SAMPLED INDEPENDENT OF
+OTHERS
+
 Trajectory length = 100
 
 Average trajectory length is 1788.35
@@ -14,8 +19,6 @@ from pros_ai.play import get_pos_trans_misc_minimal
 
 # suppresses scientific notation
 np.set_printoptions(suppress=True)
-
-trajectory_length = 100
 
 experts_file_path = "/home/joy/zReinforcementLearning/prosthetic-ai/Data/expertsss.obs"
 min_distance_path = "./distances/min_distance_minimal_TM.pkl"
@@ -50,52 +53,100 @@ To make sure it doesn't distort data too much calculate difference between fixed
 Expected to be close to 0 if assumed symmetric noise (dynamics can be non-linear 
 although considering very less time so not a problem. but that's why close to 0 and not exactly 0) 
 """
+trajectory_length = 100
 
 # Example - If value is 2, then samples chosen for weighing would be t-2, t-1, t, t+1, t+2
 weighing_window_half_length = 2
 window_length = weighing_window_half_length * 2 + 1
 weights = [1 / window_length] * window_length
 
-reference_trajectory_index = np.argmin(min_distance_dict["max"])
-reference_trajectory_start_index = int(min_distance_dict["max_ind"][reference_trajectory_index])
+sampled_expert_path = "./sampled_experts.obs"
+sampled_expert_trajectories = []
 
-reference_trajectory = expert_trajectories[reference_trajectory_index]
-reference_trajectory_length = len(reference_trajectory)
+for expert_index in range(len(expert_trajectories)):
+    expert_trajectory = expert_trajectories[expert_index]
+    expert_trajectory_start_index = int(min_distance_dict["max_ind"][expert_index])
 
-observation_length = len(get_pos_trans_misc_minimal(reference_trajectory[0]))
-reference_trajectory_skip = int(reference_trajectory_length / trajectory_length)
-sampled_reference_trajectory = [get_pos_trans_misc_minimal(reference_trajectory[reference_trajectory_start_index])]
-non_weighted_sampled_reference_trajectory = [
-    get_pos_trans_misc_minimal(reference_trajectory[reference_trajectory_start_index])]
+    expert_trajectory_length = len(expert_trajectory)
 
-print(reference_trajectory_index)
-print(reference_trajectory_start_index)
-print(reference_trajectory_length)
-print(reference_trajectory_skip)
-print(observation_length)
+    observation_length = len(get_pos_trans_misc_minimal(expert_trajectory[0]))
+    expert_trajectory_skip = int(expert_trajectory_length / trajectory_length)
+    sampled_expert_trajectory = [get_pos_trans_misc_minimal(expert_trajectory[expert_trajectory_start_index])]
 
-for t in range(reference_trajectory_start_index + reference_trajectory_skip,
-               reference_trajectory_start_index + ((trajectory_length - 1) * reference_trajectory_skip) + 1,
-               reference_trajectory_skip):
-    sample = np.zeros(shape=(observation_length,1))
-    for i in range(-weighing_window_half_length, weighing_window_half_length + 1):
-        sample += get_pos_trans_misc_minimal(reference_trajectory[(t + i) % reference_trajectory_length])
-    sample /= window_length
-    sampled_reference_trajectory.append(sample)
-    non_weighted_sampled_reference_trajectory.append(
-        get_pos_trans_misc_minimal(reference_trajectory[t % reference_trajectory_length]))
+    print(f"\nExpert {expert_index+1}\n")
+    print(expert_trajectory_start_index)
+    print(expert_trajectory_length)
+    print(expert_trajectory_skip)
+    print(observation_length)
 
-sampled_reference_trajectory = np.array(sampled_reference_trajectory)
-non_weighted_sampled_reference_trajectory = np.array(non_weighted_sampled_reference_trajectory)
+    for t in range(expert_trajectory_start_index + expert_trajectory_skip,
+                   expert_trajectory_start_index + ((trajectory_length - 1) * expert_trajectory_skip) + 1,
+                   expert_trajectory_skip):
+        sample = np.zeros(shape=(observation_length, 1))
+        for i in range(-weighing_window_half_length, weighing_window_half_length + 1):
+            sample += get_pos_trans_misc_minimal(expert_trajectory[(t + i) % expert_trajectory_length])
+        sample /= window_length
+        sampled_expert_trajectory.append(sample)
 
-# print(sampled_reference_trajectory)
-# print(non_weighted_sampled_reference_trajectory)
-print(sampled_reference_trajectory.shape)
-print(non_weighted_sampled_reference_trajectory.shape)
-print(non_weighted_sampled_reference_trajectory[0].shape)
-print(sampled_reference_trajectory[12] - non_weighted_sampled_reference_trajectory[12])
-print(np.linalg.norm(sampled_reference_trajectory - non_weighted_sampled_reference_trajectory))
+    sampled_expert_trajectory = np.array(sampled_expert_trajectory)
 
-"""Got distortion 0.007817896441640874 which seems small since summed over all dimensions and trajectory length
-Hence using the weighing scheme"""
+    # # print(sampled_expert_trajectory)
+    print(sampled_expert_trajectory.shape)
 
+    sampled_expert_trajectories.append(sampled_expert_trajectory)
+
+sampled_expert_trajectories = np.array(sampled_expert_trajectories)
+print(sampled_expert_trajectories.shape)
+with open(sampled_expert_path, "wb") as f:
+    pickle.dump(sampled_expert_trajectories, f)
+
+"""NOTE - FOR NOW DISTANCES ARE ONLY USED FOR GETTING THE START POINT. THEN EACH TRAJECTORY IS SAMPLED INDEPENDENT OF
+OTHERS
+"""
+#
+#
+# reference_trajectory_index = np.argmin(min_distance_dict["max"])
+# reference_trajectory_start_index = int(min_distance_dict["max_ind"][reference_trajectory_index])
+#
+# reference_trajectory = expert_trajectories[reference_trajectory_index]
+# reference_trajectory_length = len(reference_trajectory)
+#
+# observation_length = len(get_pos_trans_misc_minimal(reference_trajectory[0]))
+# reference_trajectory_skip = int(reference_trajectory_length / trajectory_length)
+# sampled_reference_trajectory = [get_pos_trans_misc_minimal(reference_trajectory[reference_trajectory_start_index])]
+# non_weighted_sampled_reference_trajectory = [
+#     get_pos_trans_misc_minimal(reference_trajectory[reference_trajectory_start_index])]
+#
+# print(reference_trajectory_index)
+# print(reference_trajectory_start_index)
+# print(reference_trajectory_length)
+# print(reference_trajectory_skip)
+# print(observation_length)
+#
+# for t in range(reference_trajectory_start_index + reference_trajectory_skip,
+#                reference_trajectory_start_index + ((trajectory_length - 1) * reference_trajectory_skip) + 1,
+#                reference_trajectory_skip):
+#     sample = np.zeros(shape=(observation_length, 1))
+#     for i in range(-weighing_window_half_length, weighing_window_half_length + 1):
+#         sample += get_pos_trans_misc_minimal(reference_trajectory[(t + i) % reference_trajectory_length])
+#     sample /= window_length
+#     sampled_reference_trajectory.append(sample)
+#     non_weighted_sampled_reference_trajectory.append(
+#         get_pos_trans_misc_minimal(reference_trajectory[t % reference_trajectory_length]))
+#
+# sampled_reference_trajectory = np.array(sampled_reference_trajectory)
+# non_weighted_sampled_reference_trajectory = np.array(non_weighted_sampled_reference_trajectory)
+#
+# # print(sampled_reference_trajectory)
+# # print(non_weighted_sampled_reference_trajectory)
+# print(sampled_reference_trajectory.shape)
+# print(non_weighted_sampled_reference_trajectory.shape)
+# print(non_weighted_sampled_reference_trajectory[0].shape)
+# print(sampled_reference_trajectory[12] - non_weighted_sampled_reference_trajectory[12])
+# print(np.linalg.norm(sampled_reference_trajectory - non_weighted_sampled_reference_trajectory))
+#
+# """Got distortion 0.007817896441640874 which seems small since summed over all dimensions and trajectory length
+# Hence using the weighing scheme"""
+#
+# """Now for each observation in reference trajectory, find closest observation for all other experts in a fixed range
+# """
