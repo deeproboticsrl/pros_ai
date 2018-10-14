@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 from pros_ai.play import play_motion
 
-with open("./min_distance.pkl", "rb") as f:
+with open("./distances/min_distance.pkl", "rb") as f:
     min_distance_dict = pickle.load(f)
 
 print(min_distance_dict)

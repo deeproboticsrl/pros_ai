@@ -15,8 +15,8 @@ np.set_printoptions(suppress=True)
 
 model_path = "../gait14dof22musc_pros_20180507.osim"
 experts_file_path = "/home/joy/zReinforcementLearning/prosthetic-ai/Data/expertsss.obs"
-experts_stats_path = "./expert_observations.stats"
-experts_pos_stats_path = "./expert_observations_pos.stats"
+experts_stats_path = "./stats/expert_observations.stats"
+experts_pos_stats_path = "./stats/expert_observations_pos.stats"
 
 prosthetic_env = ProstheticsEnv(visualize=False)
 motion_env = MotionGenEnv(model_path=model_path, visualize=False)
@@ -105,7 +105,7 @@ min_distance_dict = {"max": min_distance_experts_max_norm, "gaussian": min_dista
                      "gaussian_ind": min_distance_index_experts_gaussian_norm,
                      "no_norm_ind": min_distance_index_experts_no_norm}
 
-with open("./min_distance.pkl", "wb") as f:
+with open("./distances/min_distance.pkl", "wb") as f:
     pickle.dump(min_distance_dict, f)
 
 print(min_distance_dict)

@@ -51,5 +51,5 @@ print(total_observations)
 # store stats
 observation_stats = {"max": observations_max, "mean": observations_mean, "std": observations_std,
                      "total": total_observations}
-with open("./expert_observations_pos.stats", "wb") as f:
+with open("./stats/expert_observations_pos.stats", "wb") as f:
     pickle.dump(observation_stats, f)
