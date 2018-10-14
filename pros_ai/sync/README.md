@@ -59,3 +59,14 @@ Although note that their indices differ a bit (581 for max and 584 for gaussian)
 
 ![image](https://user-images.githubusercontent.com/27682820/46912084-bbeb5a00-cf8a-11e8-8a12-2f7b5933074f.png)
 
+## Using body translatinal and misc positions without toe and talus (minimal_TM)
+
+Max and no - expert 114
+
+Gaussian - expert 65
+
+**Side view of max**
+
+![image](https://user-images.githubusercontent.com/27682820/46912543-50f35080-cf95-11e8-80f4-93fbd9a8e5b9.png)
+
+
