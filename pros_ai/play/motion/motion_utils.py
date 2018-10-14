@@ -83,7 +83,7 @@ def observation_to_array(observation):
 
 def get_positional_observations_array(observation):
     observation_array = []
-    body_keys = ["body_pos"]
+    body_keys = ["body_pos", "body_pos_rot"]
 
     for body_key in body_keys:
         for body_part in ["pelvis", "head", "torso", "toes_l", "tibia_l", "talus_l", "pros_tibia_r", "pros_foot_r",
