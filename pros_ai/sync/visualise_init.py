@@ -43,11 +43,11 @@ print(gaussian_norm_min_file, gaussian_norm_index)
 
 sleep_time = 5
 # visualise no norm
-play_motion(expert_file_path=no_norm_min_file, indices=[no_norm_index], sleeping_vis=True, sleep_time=sleep_time)
+# play_motion(expert_file_path=no_norm_min_file, indices=[no_norm_index], sleeping_vis=True, sleep_time=sleep_time)
 
 # visualise max norm
 # play_motion(expert_file_path=max_norm_min_file, indices=[max_norm_index], sleeping_vis=True, sleep_time=sleep_time)
 
 # visualise no norm
-# play_motion(expert_file_path=gaussian_norm_min_file, indices=[gaussian_norm_index], sleeping_vis=True,
-#             sleep_time=sleep_time)
+play_motion(expert_file_path=gaussian_norm_min_file, indices=[gaussian_norm_index], sleeping_vis=True,
+            sleep_time=sleep_time)
