@@ -96,12 +96,14 @@ def get_positional_observations_array(observation):
     return np.array(observation_array).reshape((-1, 1))
 
 
-def get_pos_trans_misc(observation):
+def get_pos_trans_misc_minimal(observation):
+    """ No toes_l, talus_l and pros_foot_r
+    """
     observation_array = []
     body_keys = ["body_pos"]
 
     for body_key in body_keys:
-        for body_part in ["pelvis", "head", "torso", "toes_l", "tibia_l", "talus_l", "pros_tibia_r", "pros_foot_r",
+        for body_part in ["pelvis", "head", "torso", "tibia_l", "pros_tibia_r",
                           "femur_l", "femur_r", "calcn_l"]:
             for i in range(3):
                 observation_array.append(observation[body_key][body_part][i])
