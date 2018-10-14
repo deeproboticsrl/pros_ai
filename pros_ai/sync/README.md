@@ -43,3 +43,19 @@ max found a different expert - index 94 *subject02_Run_20002_cycle3_states*
 
 ![image](https://user-images.githubusercontent.com/27682820/46911700-74ac9b80-cf81-11e8-9df3-75bc6123d284.png)
 
+## Using body translatinal and misc positions
+
+No norm gave expert 65 same as max and gaussian when all positions were taken.
+
+Max and gaussian found a different expert - 114 - subject20_Run_20001_cycle1_states
+
+Although note that their indices differ a bit (581 for max and 584 for gaussian) Images below are for gaussian
+
+**Side view**
+
+![image](https://user-images.githubusercontent.com/27682820/46912077-8e9eac00-cf8a-11e8-85b1-3380cb85f0b5.png)
+
+**Top view**
+
+![image](https://user-images.githubusercontent.com/27682820/46912084-bbeb5a00-cf8a-11e8-8a12-2f7b5933074f.png)
+
