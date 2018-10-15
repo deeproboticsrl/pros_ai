@@ -1,4 +1,7 @@
-"""Sample expert trajectories based on distances calculated
+"""
+We find the initial starting point for all expert trajectories using find_init.py .We sample expert trajectories to bring
+down to a desired trajectory length.
+Sample expert trajectories based on distances calculated
 Using max normalisation and trans misc observations Minimal version - remove toes, talus and pros_foot
 Also included velocity and acceleration of COM but they are not used to calculate distances
 
