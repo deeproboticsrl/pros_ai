@@ -112,3 +112,11 @@ def get_pos_trans_misc_minimal(observation):
         for i in range(3):
             observation_array.append(observation["misc"][misc_key][i])
     return np.array(observation_array).reshape((-1, 1))
+
+
+def get_expert_observation(observation):
+    return get_pos_trans_misc_minimal(observation)
+
+
+def get_policy_observation(observation):
+    return get_pos_trans_misc_minimal(observation)
