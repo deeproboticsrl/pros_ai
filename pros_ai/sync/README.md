@@ -1,3 +1,6 @@
+**NOTE - FOR NOW DISTANCES ARE ONLY USED FOR GETTING THE START POINT. THEN EACH TRAJECTORY IS SAMPLED INDEPENDENT OF
+OTHERS**
+
 # Min distance images for all 3 normalisations
 
 ## Using body translational and rotational positions and misc positions
