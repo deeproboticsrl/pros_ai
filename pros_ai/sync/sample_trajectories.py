@@ -68,19 +68,24 @@ sampled_expert_trajectories = []
 
 for expert_index in range(len(expert_trajectories)):
     expert_trajectory = expert_trajectories[expert_index]
+
+    # Extract context from expert file name
+    context = expert_filenames[expert_index].split('/')[-1].split('_')[2][0]
+
     expert_trajectory_start_index = int(min_distance_dict["max_ind"][expert_index])
 
     expert_trajectory_length = len(expert_trajectory)
 
     observation_length = len(get_pos_trans_misc_minimal(expert_trajectory[0]))
     expert_trajectory_skip = int(expert_trajectory_length / trajectory_length)
-    sampled_expert_trajectory = [get_pos_trans_misc_minimal(expert_trajectory[expert_trajectory_start_index])]
+    sampled_expert_trajectory = [{"state": get_pos_trans_misc_minimal(expert_trajectory[expert_trajectory_start_index]),
+                                  "context": context}]
 
     print(f"\nExpert {expert_index+1}\n")
-    print(expert_trajectory_start_index)
-    print(expert_trajectory_length)
-    print(expert_trajectory_skip)
-    print(observation_length)
+    print(f"Trajectory start index {expert_trajectory_start_index}")
+    print(f"Trajectory length {expert_trajectory_length}")
+    print(f"Trajectory skip/jump {expert_trajectory_skip}")
+    print(f"Observation Length {observation_length}")
 
     for t in range(expert_trajectory_start_index + expert_trajectory_skip,
                    expert_trajectory_start_index + ((trajectory_length - 1) * expert_trajectory_skip) + 1,
@@ -89,17 +94,18 @@ for expert_index in range(len(expert_trajectories)):
         for i in range(-weighing_window_half_length, weighing_window_half_length + 1):
             sample += get_pos_trans_misc_minimal(expert_trajectory[(t + i) % expert_trajectory_length])
         sample /= window_length
-        sampled_expert_trajectory.append(sample)
+        sampled_expert_trajectory.append({"state": sample, "context": context})
 
-    sampled_expert_trajectory = np.array(sampled_expert_trajectory)
+    # sampled_expert_trajectory = np.array(sampled_expert_trajectory)
 
     # # print(sampled_expert_trajectory)
-    print(sampled_expert_trajectory.shape)
-
+    # print(sampled_expert_trajectory.shape)
+    print(f"Sampled trajectory length {len(sampled_expert_trajectory)}")
     sampled_expert_trajectories.append(sampled_expert_trajectory)
 
-sampled_expert_trajectories = np.array(sampled_expert_trajectories)
-print(sampled_expert_trajectories.shape)
+# sampled_expert_trajectories = np.array(sampled_expert_trajectories)
+# print(sampled_expert_trajectories.shape)
+print(f"Total number of experts {len(sampled_expert_trajectories)}")
 with open(sampled_expert_path, "wb") as f:
     pickle.dump(sampled_expert_trajectories, f)
 
