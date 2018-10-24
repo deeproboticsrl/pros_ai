@@ -69,8 +69,11 @@ sampled_expert_trajectories = []
 for expert_index in range(len(expert_trajectories)):
     expert_trajectory = expert_trajectories[expert_index]
 
-    # Extract context from expert file name
-    context = expert_filenames[expert_index].split('/')[-1].split('_')[2][0]
+    """Extract context from expert file name
+    Context here belongs to {2,3,4,5}
+    Convert it to binary 00,01,10,11"""
+    context = int(expert_filenames[expert_index].split('/')[-1].split('_')[2][0]) - 2
+    context = [int(context / 2), context % 2]
 
     expert_trajectory_start_index = int(min_distance_dict["max_ind"][expert_index])
 
@@ -78,8 +81,7 @@ for expert_index in range(len(expert_trajectories)):
 
     observation_length = len(get_pos_trans_misc_minimal(expert_trajectory[0]))
     expert_trajectory_skip = int(expert_trajectory_length / trajectory_length)
-    sampled_expert_trajectory = [{"state": get_pos_trans_misc_minimal(expert_trajectory[expert_trajectory_start_index]),
-                                  "context": context}]
+    sampled_expert_trajectory = [get_pos_trans_misc_minimal(expert_trajectory[expert_trajectory_start_index])]
 
     print(f"\nExpert {expert_index+1}\n")
     print(f"Trajectory start index {expert_trajectory_start_index}")
@@ -94,14 +96,14 @@ for expert_index in range(len(expert_trajectories)):
         for i in range(-weighing_window_half_length, weighing_window_half_length + 1):
             sample += get_pos_trans_misc_minimal(expert_trajectory[(t + i) % expert_trajectory_length])
         sample /= window_length
-        sampled_expert_trajectory.append({"state": sample, "context": context})
+        sampled_expert_trajectory.append(sample)
 
     # sampled_expert_trajectory = np.array(sampled_expert_trajectory)
 
     # # print(sampled_expert_trajectory)
     # print(sampled_expert_trajectory.shape)
     print(f"Sampled trajectory length {len(sampled_expert_trajectory)}")
-    sampled_expert_trajectories.append(sampled_expert_trajectory)
+    sampled_expert_trajectories.append({"trajectory": sampled_expert_trajectory, "context": context})
 
 # sampled_expert_trajectories = np.array(sampled_expert_trajectories)
 # print(sampled_expert_trajectories.shape)
