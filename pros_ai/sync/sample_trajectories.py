@@ -81,7 +81,8 @@ for expert_index in range(len(expert_trajectories)):
 
     observation_length = len(get_pos_trans_misc_minimal(expert_trajectory[0]))
     expert_trajectory_skip = int(expert_trajectory_length / trajectory_length)
-    sampled_expert_trajectory = [get_pos_trans_misc_minimal(expert_trajectory[expert_trajectory_start_index])]
+    sampled_expert_trajectory = [
+        {"state": get_pos_trans_misc_minimal(expert_trajectory[expert_trajectory_start_index])}]
 
     print(f"\nExpert {expert_index+1}\n")
     print(f"Trajectory start index {expert_trajectory_start_index}")
@@ -96,7 +97,7 @@ for expert_index in range(len(expert_trajectories)):
         for i in range(-weighing_window_half_length, weighing_window_half_length + 1):
             sample += get_pos_trans_misc_minimal(expert_trajectory[(t + i) % expert_trajectory_length])
         sample /= window_length
-        sampled_expert_trajectory.append(sample)
+        sampled_expert_trajectory.append({"state": sample})
 
     # sampled_expert_trajectory = np.array(sampled_expert_trajectory)
 
